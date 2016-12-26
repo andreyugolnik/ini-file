@@ -138,138 +138,140 @@ namespace
 
 
 
-    class cSection final
+}
+
+
+
+class cSection final
+{
+public:
+    struct Entry
     {
-    public:
-        struct Entry
+        Entry()
+            : type(Type::Empty)
         {
-            Entry()
-                : type(Type::Empty)
-            {
-            }
+        }
 
-            Entry(const std::string& c)
-                : type(Type::Comment)
-                , key(c)
-            {
-            }
+        Entry(const std::string& c)
+            : type(Type::Comment)
+            , key(c)
+        {
+        }
 
-            Entry(const std::string& k, const std::string& v)
-                : type(Type::KeyValue)
-                , key(k)
-                , value(v)
-            {
-            }
+        Entry(const std::string& k, const std::string& v)
+            : type(Type::KeyValue)
+            , key(k)
+            , value(v)
+        {
+        }
 
-            enum class Type
-            {
-                Empty,
-                Comment,
-                KeyValue,
-            };
-
-            Type type;
-            std::string key;
-            std::string value;
+        enum class Type
+        {
+            Empty,
+            Comment,
+            KeyValue,
         };
-        typedef std::vector<Entry> Entries;
 
-        cSection(const std::string& name)
-            : m_name(name)
+        Type type;
+        std::string key;
+        std::string value;
+    };
+    typedef std::vector<Entry> Entries;
+
+    cSection(const std::string& name)
+        : m_name(name)
+    {
+    }
+
+    const std::string& getName() const
+    {
+        return m_name;
+    }
+
+    void add(const std::string& data)
+    {
+        if (data.length())
         {
-        }
-
-        const std::string& getName() const
-        {
-            return m_name;
-        }
-
-        void add(const std::string& data)
-        {
-            if (data.length())
+            if (data[0] != ';')
             {
-                if (data[0] != ';')
+                auto pos = data.find('=');
+                if (pos != std::string::npos)
                 {
-                    auto pos = data.find('=');
-                    if (pos != std::string::npos)
-                    {
-                        auto key = data.substr(0, pos - 1);
-                        TrimSpaces(key);
+                    auto key = data.substr(0, pos - 1);
+                    TrimSpaces(key);
 
-                        auto value = data.substr(pos + 1, data.length() - pos);
-                        TrimSpaces(value);
+                    auto value = data.substr(pos + 1, data.length() - pos);
+                    TrimSpaces(value);
 
-                        m_entries.push_back({ key, value });
-                    }
-                    else
-                    {
-                        auto key = data;
-                        TrimSpaces(key);
-                        m_entries.push_back({ key, "" });
-                    }
-                }
-                else
-                {
-                    m_entries.push_back({ data });
-                }
-            }
-            else
-            {
-                m_entries.push_back({ });
-            }
-        }
-
-        void setValue(const char* key, const char* value)
-        {
-            auto it = std::find_if(m_entries.begin(), m_entries.end(), [&key](const Entry & e)
-            {
-                return e.key == key;
-            });
-
-            if (value != nullptr)
-            {
-                if (it != m_entries.end())
-                {
-                    it->value = value;
-                }
-                else
-                {
                     m_entries.push_back({ key, value });
                 }
+                else
+                {
+                    auto key = data;
+                    TrimSpaces(key);
+                    m_entries.push_back({ key, "" });
+                }
             }
             else
             {
-                if (it != m_entries.end())
-                {
-                    m_entries.erase(it);
-                }
+                m_entries.push_back({ data });
             }
         }
-
-        const char* getValue(const char* key) const
+        else
         {
-            auto it = std::find_if(m_entries.begin(), m_entries.end(), [key](const Entry & e)
-            {
-                return e.key == key;
-            });
+            m_entries.push_back({ });
+        }
+    }
+
+    void setValue(const char* key, const char* value)
+    {
+        auto it = std::find_if(m_entries.begin(), m_entries.end(), [&key](const Entry & e)
+        {
+            return e.key == key;
+        });
+
+        if (value != nullptr)
+        {
             if (it != m_entries.end())
             {
-                return it->value.c_str();
+                it->value = value;
             }
-            return nullptr;
+            else
+            {
+                m_entries.push_back({ key, value });
+            }
         }
-
-        const Entries& getEntries() const
+        else
         {
-            return m_entries;
+            if (it != m_entries.end())
+            {
+                m_entries.erase(it);
+            }
         }
+    }
 
-    private:
-        const std::string m_name;
-        Entries m_entries;
-    };
+    const char* getValue(const char* key) const
+    {
+        auto it = std::find_if(m_entries.begin(), m_entries.end(), [key](const Entry & e)
+        {
+            return e.key == key;
+        });
+        if (it != m_entries.end())
+        {
+            return it->value.c_str();
+        }
+        return nullptr;
+    }
 
-}
+    const Entries& getEntries() const
+    {
+        return m_entries;
+    }
+
+private:
+    const std::string m_name;
+    Entries m_entries;
+};
 
 
 
@@ -301,6 +303,19 @@ cSection* cIni::parseLine(const std::string& s, cSection* currentSection)
     }
 
     return currentSection;
+}
+
+cSection* cIni::find(const char* section) const
+{
+    for (auto s : m_sections)
+    {
+        if (s->getName() == section)
+        {
+            return s;
+        }
+    }
+
+    return nullptr;
 }
 
 void cIni::read(cFile* file)
@@ -355,19 +370,6 @@ void cIni::save(cFile* file)
             file->write((void*)end, endLen);
         }
     }
-}
-
-cSection* cIni::find(const char* section) const
-{
-    for (auto s : m_sections)
-    {
-        if (s->getName() == section)
-        {
-            return s;
-        }
-    }
-
-    return nullptr;
 }
 
 const char* cIni::getString(const char* section, const char* key) const

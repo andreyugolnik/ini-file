@@ -43,14 +43,7 @@ private:
 
 
 
-namespace
-{
-
-    class cSection;
-
-}
-
-
+class cSection;
 
 class cIni final
 {
@@ -63,13 +56,12 @@ public:
     void read(cFile* file);
     void save(cFile* file);
 
-    cSection* find(const char* section) const;
-
     const char* getString(const char* section, const char* key) const;
     void setString(const char* section, const char* key, const char* value);
 
 private:
     cSection* parseLine(const std::string& s, cSection* currentSection);
+    cSection* find(const char* section) const;
 
 private:
     std::vector<cSection*> m_sections;
