@@ -219,14 +219,14 @@ namespace
             }
         }
 
-        void setValue(const std::string& key, const std::string& value)
+        void setValue(const char* key, const char* value)
         {
             auto it = std::find_if(m_entries.begin(), m_entries.end(), [&key](const Entry & e)
             {
                 return e.key == key;
             });
 
-            if (!value.empty())
+            if (value != nullptr)
             {
                 if (it != m_entries.end())
                 {
