@@ -1,60 +1,56 @@
 /**********************************************\
 *
 *  Andrey A. Ugolnik
-*  Tiny Orange, OOO
-*  http://www.tinyorange.com
+*  http://www.ugolnik.info
 *  andrey@ugolnik.info
 *
 \**********************************************/
 
-#include <iostream>
-#include <stdio.h>
-#include "inifile.h"
+#include "Ini.h"
 
-static int GetFileSize(const char* name)
+int main(int argc, const char* argv[])
 {
-    FILE* f = fopen(name, "rb");
-    fseek(f, 0, SEEK_END);
-    const int size = ftell(f);
-    fclose(f);
-    return size;
-}
-
-int main()
-{
-    const char* file_name = "test.ini";
-
-    CIniFile ini;
-    for(int i = 0; i < 1000; i++)
+    if (argc == 3)
     {
-        if(ini.ReadIni(file_name))
+        cFile inFile;
+        if (inFile.open(argv[1]))
         {
-            printf("Reading INI-file, size %d\n", GetFileSize(file_name));
-            printf("%d, %d, %d, %d\n",
-                    ini.GetInt("Options", "W", 999),
-                    ini.GetInt("Options", "Mute", 0),
-                    ini.GetInt("Options", "VolumeMusic", 0),
-                    ini.GetInt("Options", "VolumeEffects", 0));
+            cIni ini;
 
-            ini.SetInt("Options", "W", 10000);
-            ini.SetInt("Options", "Mute", 40);
-            ini.SetInt("Options", "VolumeMusic", 50);
-            ini.SetInt("Options", "VolumeEffects", 60);
-            //ini.SetInt("Options2", "VolumeEffects2", 100);
-            ini.SetInt("Options", "unknown_key", 888);
-            printf("%d, %d, %d, %d, %d, %d\n",
-                    ini.GetInt("Options", "Windowed", 0),
-                    ini.GetInt("Options", "Mute", 0),
-                    ini.GetInt("Options", "VolumeMusic", 0),
-                    ini.GetInt("Options", "VolumeEffects", 0),
-                    ini.GetInt("Options2", "VolumeEffects2", 0),
-                    ini.GetInt("Options", "W", 0));
+            {
+                ini.read(&inFile);
+
+                printf("Reading INI-file: %s, size %u\n", argv[1], (unsigned)inFile.size());
+                printf("%s, %s, %s, %s\n",
+                       ini.getString("Options", "W"),
+                       ini.getString("Options", "Mute"),
+                       ini.getString("Options", "VolumeMusic"),
+                       ini.getString("Options", "VolumeEffects"));
+            }
+
+            {
+                ini.setString("new section", "key", "value");
+                ini.setString("new section", "key with spaces", "value");
+                ini.setString("new section", "value_with_spaces", "some value with spaces");
+            }
+
+            cFile outFile;
+            if (outFile.open(argv[2], "wb"))
+            {
+                printf("%s, %s, %s, %s, %s, %s\n",
+                       ini.getString("Options", "Windowed"),
+                       ini.getString("Options", "Mute"),
+                       ini.getString("Options", "VolumeMusic"),
+                       ini.getString("Options", "VolumeEffects"),
+                       ini.getString("Options2", "VolumeEffects2"),
+                       ini.getString("Options", "W"));
 
 
-            ini.WriteIni(file_name);
-            printf("Writing INI-file, size %d\n", GetFileSize(file_name));
+                ini.save(&outFile);
+                printf("Writing INI-file: %s, size %u\n", argv[2], outFile.size());
+            }
         }
     }
+
     return 0;
 }
-
