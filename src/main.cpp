@@ -12,10 +12,10 @@ int main(int argc, const char* argv[])
 {
     if (argc == 3)
     {
-        cFile inFile;
+        ini::cFile inFile;
         if (inFile.open(argv[1]))
         {
-            cIni ini;
+            ini::cIni ini;
 
             {
                 ini.read(&inFile);
@@ -36,7 +36,7 @@ int main(int argc, const char* argv[])
                 ini.setString("new section", "value_with_spaces", "some value with spaces");
             }
 
-            cFile outFile;
+            ini::cFile outFile;
             if (outFile.open(argv[2], "wb"))
             {
                 ini.save(&outFile);
@@ -51,6 +51,11 @@ int main(int argc, const char* argv[])
                 printf("  %s\n", ini.getString("new section", "value_with_spaces"));
             }
         }
+    }
+    else
+    {
+        printf("Usage:\n");
+        printf("  %s test.ini out.ini\n", argv[0]);
     }
 
     return 0;
