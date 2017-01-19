@@ -1,6 +1,7 @@
 ##Non destructive Ini-file parser.##
 
 ##Usage:##
+```c++
     ini::cIni ini;
 
     // read from ini-file
@@ -28,7 +29,7 @@
             ini.save(&file);
         }
     }
-
+```
 
 ***
 ```
