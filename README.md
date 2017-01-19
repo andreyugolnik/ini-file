@@ -1,7 +1,6 @@
 ##Non destructive Ini-file parser.##
 
 ##Usage:##
-```
     ini::cIni ini;
 
     // read from ini-file
@@ -30,7 +29,6 @@
         }
     }
 
-```
 
 ***
 ```
