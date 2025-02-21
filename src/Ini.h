@@ -1,8 +1,10 @@
 /**********************************************\
 *
 *  Andrey A. Ugolnik
-*  http://www.ugolnik.info
+*  https://www.ugolnik.info
 *  andrey@ugolnik.info
+*
+*  MIT License
 *
 \**********************************************/
 
@@ -12,7 +14,6 @@
 
 namespace ini
 {
-
     class cFile
     {
     public:
@@ -38,15 +39,12 @@ namespace ini
         virtual bool seek(unsigned offset, int whence);
 
     private:
-        void* m_file;
-        unsigned m_size;
-        unsigned m_offset;
+        void* m_file = nullptr;
+        unsigned m_size = 0;
+        unsigned m_offset = 0;
     };
 
-
-
     class cSection;
-    typedef std::vector<cSection*> SectionList;
 
     class cIni final
     {
@@ -62,8 +60,11 @@ namespace ini
         const char* getString(const char* section, const char* key) const;
         void setString(const char* section, const char* key, const char* value);
 
+    public:
+        using SectionList = std::vector<cSection*>;
+
     private:
-        ini::SectionList m_sections;
+        SectionList m_sections;
     };
 
-}
+} // namespace ini

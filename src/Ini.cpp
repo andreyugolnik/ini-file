@@ -1,8 +1,10 @@
 /**********************************************\
 *
 *  Andrey A. Ugolnik
-*  http://www.ugolnik.info
+*  https://www.ugolnik.info
 *  andrey@ugolnik.info
+*
+*  MIT License
 *
 \**********************************************/
 
@@ -15,11 +17,7 @@
 
 namespace ini
 {
-
     cFile::cFile()
-        : m_file(nullptr)
-        , m_size(0)
-        , m_offset(0)
     {
     }
 
@@ -39,7 +37,7 @@ namespace ini
         if (m_file != nullptr)
         {
             seek(0, SEEK_END);
-            m_size = (unsigned)ftell((FILE*)m_file);
+            m_size = static_cast<unsigned>(ftell(static_cast<FILE*>(m_file)));
             seek(0, SEEK_SET);
         }
 
@@ -48,10 +46,12 @@ namespace ini
 
     bool cFile::close()
     {
-        const bool result = m_file != nullptr ? (fclose((FILE*)m_file) == 0) : false;
+        const bool result = m_file != nullptr
+            ? (fclose(static_cast<FILE*>(m_file)) == 0)
+            : false;
 
-        m_file   = nullptr;
-        m_size   = 0;
+        m_file = nullptr;
+        m_size = 0;
         m_offset = 0;
 
         return result;
@@ -59,14 +59,14 @@ namespace ini
 
     unsigned cFile::read(void* buffer, unsigned size)
     {
-        const unsigned count = (unsigned)fread(buffer, 1, size, (FILE*)m_file);
+        auto count = static_cast<unsigned>(fread(buffer, 1, size, static_cast<FILE*>(m_file)));
         m_offset += count;
         return count;
     }
 
     unsigned cFile::write(const void* buffer, unsigned size)
     {
-        const unsigned count = (unsigned)fwrite(buffer, 1, size, (FILE*)m_file);
+        auto count = static_cast<unsigned>(fwrite(buffer, 1, size, static_cast<FILE*>(m_file)));
         m_offset += count;
 
         if (m_offset > m_size)
@@ -79,7 +79,7 @@ namespace ini
 
     bool cFile::seek(unsigned offset, int whence)
     {
-        const bool result = fseek((FILE*)m_file, (long)offset, whence) == 0;
+        const bool result = fseek(static_cast<FILE*>(m_file), static_cast<long>(offset), whence) == 0;
         if (result)
         {
             switch (whence)
@@ -87,9 +87,11 @@ namespace ini
             case SEEK_SET:
                 m_offset = offset;
                 break;
+
             case SEEK_CUR:
                 m_offset += offset;
                 break;
+
             case SEEK_END:
                 m_offset -= offset;
                 break;
@@ -104,42 +106,42 @@ namespace ini
         return result;
     }
 
-
-
-    void TrimSpaces(std::string& str)
+    namespace
     {
-        // Trim Both leading and trailing spaces
-        auto startpos = str.find_first_not_of(" \t\r\n");
-        auto endpos = str.find_last_not_of(" \t\r\n");
+        void TrimSpaces(std::string& str)
+        {
+            // Trim Both leading and trailing spaces
+            auto startpos = str.find_first_not_of(" \t\r\n");
+            auto endpos = str.find_last_not_of(" \t\r\n");
 
-        // if all spaces or empty return an empty string
-        if (std::string::npos == startpos || std::string::npos == endpos)
-        {
-            str = "";
-        }
-        else
-        {
-            str = str.substr(startpos, endpos - startpos + 1);
-        }
-    }
-
-    std::vector<std::string> ReadLines(const std::vector<char>& in)
-    {
-        std::vector<std::string> result;
-        size_t start = 0;
-        for (size_t i = 0, size = in.size(); i < size; i++)
-        {
-            if (in[i] == '\n')
+            // if all spaces or empty return an empty string
+            if (std::string::npos == startpos || std::string::npos == endpos)
             {
-                result.push_back({ &in[start], i - start });
-                start = i + 1;
+                str = "";
+            }
+            else
+            {
+                str = str.substr(startpos, endpos - startpos + 1);
             }
         }
 
-        return result;
-    }
+        std::vector<std::string> ReadLines(const std::vector<char>& in)
+        {
+            std::vector<std::string> result;
+            size_t start = 0;
+            for (size_t i = 0, size = in.size(); i < size; i++)
+            {
+                if (in[i] == '\n')
+                {
+                    result.push_back({ &in[start], i - start });
+                    start = i + 1;
+                }
+            }
 
+            return result;
+        }
 
+    } // namespace
 
     class cSection final
     {
@@ -175,7 +177,8 @@ namespace ini
             std::string key;
             std::string value;
         };
-        typedef std::vector<Entry> Entries;
+
+        using Entries = std::vector<Entry>;
 
         cSection(const std::string& name)
             : m_name(name)
@@ -218,16 +221,14 @@ namespace ini
             }
             else
             {
-                m_entries.push_back({ });
+                m_entries.push_back({});
             }
         }
 
         void setValue(const char* key, const char* value)
         {
-            auto it = std::find_if(m_entries.begin(), m_entries.end(), [&key](const Entry & e)
-            {
-                return e.key == key;
-            });
+            auto it = std::find_if(m_entries.begin(), m_entries.end(),
+                                   [&key](const Entry& e) { return e.key == key; });
 
             if (value != nullptr)
             {
@@ -251,10 +252,8 @@ namespace ini
 
         const char* getValue(const char* key) const
         {
-            auto it = std::find_if(m_entries.begin(), m_entries.end(), [key](const Entry & e)
-            {
-                return e.key == key;
-            });
+            auto it = std::find_if(m_entries.begin(), m_entries.end(),
+                                   [key](const Entry& e) { return e.key == key; });
             if (it != m_entries.end())
             {
                 return it->value.c_str();
@@ -269,12 +268,12 @@ namespace ini
 
     private:
         const std::string m_name;
+
+    private:
         Entries m_entries;
     };
 
-
-
-    cSection* Find(const char* section, const ini::SectionList& sections)
+    cSection* Find(const char* section, const cIni::SectionList& sections)
     {
         for (auto s : sections)
         {
@@ -287,7 +286,8 @@ namespace ini
         return nullptr;
     }
 
-    cSection* ParseLine(const std::string& s, ini::cSection* currentSection, ini::SectionList& sections)
+    cSection* ParseLine(const std::string& s, cSection* currentSection,
+                        cIni::SectionList& sections)
     {
         auto len = s.length();
         if (len > 2 && s[0] == '[' && s[len - 1] == ']')
@@ -296,7 +296,7 @@ namespace ini
             currentSection = Find(name.c_str(), sections);
             if (currentSection == nullptr)
             {
-                currentSection = new ini::cSection(name);
+                currentSection = new cSection(name);
                 sections.push_back(currentSection);
             }
         }
@@ -307,8 +307,6 @@ namespace ini
 
         return currentSection;
     }
-
-
 
     cIni::cIni()
     {
@@ -325,11 +323,11 @@ namespace ini
 
         auto size = file->size();
         std::vector<char> in(size);
-        file->read(&in[0], size);
+        file->read(in.data(), size);
 
         auto lines = ini::ReadLines(in);
 
-        ini::cSection* currentSection = nullptr;
+        cSection* currentSection = nullptr;
         for (auto& line : lines)
         {
             currentSection = ParseLine(line, currentSection, m_sections);
@@ -338,37 +336,37 @@ namespace ini
 
     void cIni::save(cFile* file)
     {
-        const char* delim = " = ";
-        auto delimLen = strlen(delim);
+        constexpr auto delim = " = ";
+        static const auto delimLen = strlen(delim);
 
-        const char* end = "\n";
-        auto endLen = strlen(end);
+        constexpr auto end = "\n";
+        static const auto endLen = strlen(end);
 
         for (const auto section : m_sections)
         {
             const std::string name = "[" + section->getName() + "]\n";
-            file->write((void*)name.c_str(), name.length());
+            file->write(name.c_str(), name.length());
 
             auto& entries = section->getEntries();
             for (const auto& e : entries)
             {
                 switch (e.type)
                 {
-                case ini::cSection::Entry::Type::KeyValue:
-                    file->write((void*)e.key.c_str(), e.key.length());
-                    file->write((void*)delim, delimLen);
-                    file->write((void*)e.value.c_str(), e.value.length());
+                case cSection::Entry::Type::KeyValue:
+                    file->write(e.key.c_str(), e.key.length());
+                    file->write(delim, delimLen);
+                    file->write(e.value.c_str(), e.value.length());
                     break;
 
-                case ini::cSection::Entry::Type::Comment:
-                    file->write((void*)e.key.c_str(), e.key.length());
+                case cSection::Entry::Type::Comment:
+                    file->write(e.key.c_str(), e.key.length());
                     break;
 
-                case ini::cSection::Entry::Type::Empty:
+                case cSection::Entry::Type::Empty:
                     break;
                 }
 
-                file->write((void*)end, endLen);
+                file->write(end, endLen);
             }
         }
     }
@@ -376,7 +374,9 @@ namespace ini
     const char* cIni::getString(const char* section, const char* key) const
     {
         auto s = Find(section, m_sections);
-        return s != nullptr ? s->getValue(key) : nullptr;
+        return s != nullptr
+            ? s->getValue(key)
+            : nullptr;
     }
 
     void cIni::setString(const char* section, const char* key, const char* value)
@@ -388,7 +388,7 @@ namespace ini
         }
         else
         {
-            s = new ini::cSection(section);
+            s = new cSection(section);
             s->setValue(key, value);
             m_sections.push_back(s);
         }
