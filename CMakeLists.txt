@@ -1,17 +1,19 @@
-PROJECT(inifile)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+cmake_minimum_required(VERSION 3.22)
+project(inifile)
 
-INCLUDE(FindPkgConfig)
+include(FindPkgConfig)
 
 # additional compiler flags
-SET( CMAKE_CXX_FLAGS "-std=c++11 -Wall -O2" )
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -O2")
 
-SET( SOURCES
+set(SOURCES
     src/main.cpp
     src/Ini.cpp
-    )
+)
 
-ADD_EXECUTABLE( inifile
-    ${SOURCES} # We could've listed the source files here directly instead of using a variable to store them
-    )
+add_executable(inifile
+    # We could've listed the source files here directly
+    # instead of using a variable to store them
+    ${SOURCES}
+)
 
