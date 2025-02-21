@@ -1,7 +1,9 @@
-##Non destructive Ini-file parser.##
+# Non-Destructive INI File Parser
 
-##Usage:##
-```c++
+A simple C++ class for reading and writing INI files.
+
+## Usage
+```cpp
     ini::cIni ini;
 
     // read from ini-file
@@ -32,8 +34,9 @@
 ```
 
 ***
+
 ```
 Copyright © 2000-2017 Andrey A. Ugolnik. All Rights Reserved.
-http://www.ugolnik.info
+https://www.ugolnik.info
 andrey@ugolnik.info
 ```
